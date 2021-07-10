@@ -10,99 +10,87 @@ References:
 */
 
 /*
-    Implementation of Fenwick Tree supporting:
-    Range Increments and point query
+    Fenwick Tree - Point Query Range Update
 
-    Note:
-    The fenwick array is 1-indexed unlike the orgininal array.
-    Please keep this in mind when you query!
+    Types of operations:
+        - f:
+            - An associative function
+            - By default plus
+        - f_rev:
+            - Inverse of f
+            - By default minus
+
+    Time Complexity: 
+        - Insertion: O(log(n))
+        - Query: O(log(n))
+
+    Space Complexity:
+        - O(n)
+    
+
+    Note: 
+        - To disable assertions #define NDEBUG before including assert.h
 */
-template <typename T1>
-class Fenwick_Tree_PQRU
+template <typename T>
+struct FenwickTree_PQRU
 {
-public:
-    int n;
-    vector<T1> fenwick;
-
 private:
-    inline T1 f(T1 x, T1 y)
-    {
-        return x + y;
-    }
-    inline T1 f_rev(T1 x, T1 y)
-    {
-        return x - y;
-    }
+    /*
+        Not intended to be included in API,
+        instead use range_update(i,i,delta)
 
-    /* 
-        Performs f ( fenwick[i], delta )
-        By default adds delta at index i.
+        Add delta to index
     */
-    void point_add(int i, T1 delta)
+    void point_update(int index, T delta)
     {
-        while (i < n)
+        while (index < n)
         {
-            fenwick[i] = f(fenwick[i], delta);
-            i += i & -i;
+            fenwick_tree[index] = f(fenwick_tree[index], delta);
+            index |= (index + 1);
         }
     }
 
 public:
-    // Empty Constructor
-    Fenwick_Tree_PQRU() {}
+    vector<T> fenwick_tree;
+    int n;
 
-    /* 
-        Constructs a Fenwick Tree(1 - indexed) for the given array of size n+1
-        Time: O(n)
-    */
-    Fenwick_Tree_PQRU(vector<T1> &arr)
+    T f(T a, T b)
     {
-        n = arr.size() + 1;
-        fenwick = vector<T1>(n, 0);
+        return a + b;
+    }
+    T f_rev(T a, T b)
+    {
+        return a - b;
+    }
+    FenwickTree_PQRU() {}
+    FenwickTree_PQRU(int size) : n(size), fenwick_tree(size) {}
 
-        int cur_sum = 0;
-
-        for (int i = 0; i < n - 1; i++)
-        {
-            fenwick[i + 1] = arr[i] - cur_sum;
-            cur_sum = f(cur_sum, f_rev(arr[i], cur_sum));
-        }
-
-        int parent_ind;
-        for (int i = 1; i < n; i++)
-        {
-            parent_ind = i + (i & -i);
-            if (parent_ind < n)
-            {
-                fenwick[parent_ind] = f(fenwick[parent_ind], fenwick[i]);
-            }
-        }
+    // Initialize from arr of size `n` in O(n*log(n))
+    FenwickTree_PQRU(vector<T> arr) : FenwickTree_PQRU(arr.size())
+    {
+        for (int i = 0; i < n; ++i)
+            range_update(i, i, arr[i]);
     }
 
-    /*
-        Returns the value at index i
-        Assumes 1 based indexing
-        Time: O(logn)
-    */
-    T1 point_query(int i)
+    // Get value at index
+    T point_query(int index)
     {
-        T1 total = 0;
-        while (i > 0)
+        assert(0 <= index && index < n);
+        T ans = 0;
+        while (index >= 0)
         {
-            total = f(total, fenwick[i]);
-            i -= i & -i; //flip last set bit
+            ans = f(ans, fenwick_tree[index]);
+            index = (index & (index + 1)) - 1;
         }
-        return total;
+        return ans;
     }
 
-    /*
-        Performs f(fenwick[i], delta) for all l <= i <= r
-        Assumes 1 based indexing
-        Time : O(logn * 2)
-    */
-    void range_update(int l, int r, int delta)
+    // Add delta to all values in range [L:R]
+    void range_update(int l, int r, T delta)
     {
-        point_add(l, delta);
-        point_add(r + 1, -delta);
+        assert(0 <= l && l <= r);
+        assert(r < n);
+        point_update(l, delta);
+        point_update(r + 1, -delta);
     }
 };
