@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "../Advanced Data Structures/Fenwick Trees/fenwick_PQRU.cpp"
+#include "../Range Queries/Fenwick Trees/fenwick_PQRU.cpp"
 #define CATCH_CONFIG_ENABLE_BENCHMARKING
 #include "catch.hpp"
 using namespace std;
