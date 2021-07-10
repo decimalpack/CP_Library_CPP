@@ -14,96 +14,90 @@ References:
 */
 
 /*
-    Implementation of classic Fenwick Tree(1-based indexing) supporting:
-    Point Increments/Updates and Range Queries.
+    Fenwick Tree - Point Update Range Query
 
-    Works for reversbile functions like add, subtract, multiply
+    Types of operations:
+        - f:
+            - An associative function
+            - By default plus
+        - f_rev:
+            - Inverse of f
+            - By default minus
 
-    Note:
-    The fenwick array is 1-indexed unlike the orgininal array.
-    Please keep this in mind when you query!
+    Time Complexity: 
+        - Insertion: O(log(n))
+        - Query: O(log(n))
+
+    Space Complexity:
+        - O(n)
+    
+
+    Note: 
+        - To disable assertions #define NDEBUG before including assert.h
 */
-template <typename T1>
-class Fenwick_Tree_PURQ
+template <typename T>
+struct FenwickTree_PURQ
 {
-public:
-    int n;
-    vector<T1> fenwick;
+    vector<T> fenwick_tree;
+    const int n;
 
-private:
-    inline T1 f(T1 x, T1 y)
+    T f(T a, T b)
     {
-        return x + y;
+        return a + b;
     }
-    inline T1 f_rev(T1 x, T1 y)
+    T f_rev(T a, T b)
     {
-        return x - y;
+        return a - b;
     }
 
-public:
-    // Empty Constructor
-    Fenwick_Tree_PURQ() {}
-
-    /* Constructs a Fenwick Tree for the given array*/
-    Fenwick_Tree_PURQ(vector<T1> &arr)
+    FenwickTree_PURQ()
     {
-        n = arr.size() + 1;
-        fenwick = vector<T1>(n, 0);
-        copy(arr.begin(), arr.end(), fenwick.begin() + 1);
-
-        int parent_ind;
-        for (int i = 1; i < n; i++)
-        {
-            parent_ind = i + (i & -i);
-            if (parent_ind < n)
-            {
-                fenwick[parent_ind] = f(fenwick[parent_ind], fenwick[i]);
-            }
-        }
     }
 
-    /*
-       Returns result after performing operation f(defualt:plus) for the range [ 1, i ]
-    */
-    T1 range_query(int i)
+    // Initialize with 0
+    FenwickTree_PURQ(int size) : n(size), fenwick_tree(size)
     {
-        T1 total = 0;
-        while (i > 0)
-        {
-            total = f(total, fenwick[i]);
-            i -= i & -i; //flip last set bit
-        }
-        return total;
-    }
-
-    /*  
-        Returns result after performing operation f(defualt:plus) for the range [ l, r ] 
-    */
-    T1 range_query(int l, int r)
-    {
-        return f_rev(range_query(r), range_query(l - 1));
     }
 
     /* 
-        Performs f ( fenwick[i], delta )
-        By default adds delta at index i.
+        Initialize from array
+        Time: O(nlog(n))
     */
-    void point_add(int i, T1 delta)
+    FenwickTree_PURQ(vector<T> arr) : FenwickTree_PURQ(arr.size())
     {
-        #ifdef DEBUG
-                assert(i > 0 && i < n);
-        #endif
-        while (i < n)
+        for (int i = 0; i < n; ++i)
+            point_update(i, arr[i]);
+    }
+
+    // Return f applied over range [0:R]
+    T range_query(int r)
+    {
+        assert(r < n);
+        T ans = 0;
+        while (r >= 0)
         {
-            fenwick[i] = f(fenwick[i], delta);
-            i += i & -i;
+            ans = f(ans, fenwick_tree[r]);
+            r = (r & (r + 1)) - 1;
+        }
+        return ans;
+    }
+
+    // Return f applied over range [L:R], 0 indexed
+    T range_query(int l, int r)
+    {
+        assert(0 <= l && l <= r);
+        assert(r < n);
+        return f_rev(range_query(r), range_query(l - 1));
+    }
+
+    // Add delta to an index
+    void point_update(int index, T delta)
+    {
+        assert(0 <= index && index < n);
+        while (index < n)
+        {
+            fenwick_tree[index] = f(fenwick_tree[index], delta);
+            index |= (index + 1);
         }
     }
 };
-
-int main()
-{
-    vector<long long> arr = {1, 2, 3, 4, 5, 6};
-    Fenwick_Tree_PURQ<long long> FT = Fenwick_Tree_PURQ<long long>(arr);
-    cout << FT.range_query(1, 4) << endl;
-}
