@@ -69,9 +69,10 @@ struct Graph {
         Reference Problem: https://binarysearch.com/problems/Detecting-an-Odd-Length-Cycle
     */
     bool is_bipartite() {
+        status.assign(graph.size(), unvisited);
         for (int node = 0; node < graph.size(); ++node) {
-            status.assign(graph.size(), unvisited);
-            if (bipartite_dfs(node, 1) == false) return false;
+            if (status[node] == unvisited && bipartite_dfs(node, 1) == false) 
+                return false;
         }
         return true;
     }
